@@ -48,7 +48,10 @@ def arrange_folder(folder, items):
 def display_content(window, file, windowHeight):
     y_coord = 3
     with open(file) as file:
-        lines = file.readlines()
+        try:
+            lines = file.readlines()
+        except UnicodeDecodeError:
+            lines = []
     for line in lines:
         y_coord += 1
         if y_coord <= windowHeight: # curses.LINES - 2
@@ -57,16 +60,16 @@ def display_content(window, file, windowHeight):
 def main(screen):
     def refresh_win2(down=True):
         # Prevent scrolling if at the end of the menu
-        if selected_option == len(previous_files) - 1:
+        if selected_option == len(current_files) - 1:
             global win2_scroll
             if win2_scroll == 0 or selected_option >= math.floor(curses.LINES / 2):
-                win2_scroll = (len(previous_files) - (curses.LINES - 1)) + 3
+                win2_scroll = (len(current_files) - (curses.LINES - 1)) + 3
             window2.refresh(win2_scroll, 0, 0, window1Width, curses.LINES - 1, curses.COLS - 1)
         elif selected_option >= math.floor(curses.LINES / 2):
             # Rotate prevents the pad from scrolling twice at once
             global rotate
             stop_scrolling = False
-            if selected_option >= (len(previous_files) - (curses.LINES / 2) + 3):
+            if selected_option >= (len(current_files) - (curses.LINES / 2) + 3):
                 stop_scrolling = True
             # Revert scrolling to original state when the highlighted item loops back to the start
             if win2_scroll >= math.floor(curses.LINES / 2) and selected_option <= math.floor(curses.LINES / 2):
@@ -89,7 +92,8 @@ def main(screen):
         for i, option in enumerate(window_data):
             y_coord += 1
             file_path = window_dir + '/' + option
-            file_size = os.path.getsize(file_path)
+            if not os.path.islink(file_path):
+                file_size = os.path.getsize(file_path)
             file_is_dir = False
             if os.path.isdir(file_path):
                 file_is_dir = True
@@ -160,17 +164,17 @@ def main(screen):
         
         return color_scheme
 
-    window2Width = math.floor(curses.COLS * 1.0/3.0)
+    window2Width = math.floor(curses.COLS * 4.0/12.0)
     window2Height = 1300
     # window2 = curses.newwin(window2Height, window2Width, 0, 0)
     window2 = curses.newpad(window2Height, window2Width)
 
-    window3Width = window2Width
+    window3Width = math.floor(curses.COLS * 5.0/12.0)
     window3Height = 1300
     # window3 = curses.newwin(window3Height, window3Width, 0, window2Width)
     window3 = curses.newpad(window3Height, window3Width)
 
-    window1Width = window3Width
+    window1Width = math.floor(curses.COLS * 3.0/12.0)
     window1Height = 1300
     # window1 = curses.newwin(window1Height, window1Width, 0, window3Width+window2Width)
     window1 = curses.newpad(window1Height, window1Width)
@@ -206,13 +210,13 @@ def main(screen):
         window1.erase()
 
 		# Print the main menu options
-        window2.addstr(1, 2, 'Menu:')
+        window2.addstr(1, 2, f'Menu: {current_dir}')
         # window2.addstr(2, 2, f'{math.floor(curses.COLS/3)}')
         display_window(window2, window2Height, window2Width, current_dir, current_files, selected_option)        
         refresh_win2()
 
         # Print the children of the parent directory
-        window3.addstr(1, 2, 'SubMenu:')
+        window3.addstr(1, 2, f'SubMenu: {future_dir}')
         if os.path.isdir(future_dir):
             display_window(window3, window3Height, window3Width, future_dir, future_files, selected_suboption)
         else:
@@ -249,19 +253,31 @@ def main(screen):
             else:
                 selected_option = 0
 
-            file = current_dir + '/' + current_files[selected_option]
-            if os.path.isdir(file):
-                future_dir = file
+            # file = current_dir + '/' + current_files[selected_option]
+            # if os.path.isdir(file):
+            #     future_dir = file
             # else:
             #     window3.addstr(2, 1, str(open(file, 'rb').read()))
                 
             window2.addstr(15, 1, "Down Key Works")
             refresh_win2(True)
         # Navigate up and down through the submenu options
-        elif (key == curses.KEY_LEFT or key == 37) and selected_suboption > 0:
-            selected_suboption -= 1
-        elif (key == curses.KEY_RIGHT or key == 39) and selected_suboption < len(current_files) - 1:
-            selected_suboption += 1
+        elif (key == curses.KEY_LEFT or key == 37):
+            # dir_name = current_dir.split('/')[-1]
+            current_dir = previous_dir
+            previous_dir = os.path.dirname(current_dir)
+            selected_option = preselected_option 
+            global win2_scroll
+            win2_scroll = math.floor(selected_option - (curses.LINES / 2) - 3)
+            if not win2_scroll >= 0:
+                win2_scroll = 0
+            refresh_win2()
+        elif (key == curses.KEY_RIGHT or key == 39):
+            if os.path.isdir(future_dir):
+                if len(os.listdir(future_dir)) > 0:
+                    previous_dir = current_dir
+                    current_dir = future_dir
+                    selected_option = 0
         # Select the current option
         elif key == curses.KEY_ENTER or key == 10 or key == 13:
             window2.addstr(len(previous_files) + 4, 1, 'You selected "{}" from the main menu and "{}" from the submenu'.format(previous_files[selected_option], current_files[selected_suboption]))
