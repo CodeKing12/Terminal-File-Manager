@@ -171,7 +171,7 @@ def main(screen):
     window3 = curses.newpad(window3Height, window3Width)
 
     window1Width = window3Width
-    window1Height = 300
+    window1Height = 1300
     # window1 = curses.newwin(window1Height, window1Width, 0, window3Width+window2Width)
     window1 = curses.newpad(window1Height, window1Width)
 
@@ -184,19 +184,22 @@ def main(screen):
     previous_dir = os.path.dirname(current_dir)
     # previous_files = previous_files[1:20]
     selected_option = 0  # Keep track of the selected main menu option
-    selected_suboption = 0  # Keep track of the selected submenu option
-    preselected_option = 0
 
     # For now, current_dir is the current directory, previous_dir is the parent directory and future_dir is the current_dir
 
     while True:
         current_files = arrange_folder(current_dir, os.listdir(current_dir))
         previous_files = arrange_folder(previous_dir, os.listdir(previous_dir))
+
         future_dir = current_dir + '/' + current_files[selected_option]
         if os.path.isdir(future_dir):
             future_files = arrange_folder(future_dir, os.listdir(future_dir))
         else:
             future_files = []
+
+        selected_suboption = 0  # Keep track of the selected submenu option
+        preselected_option = previous_files.index(current_dir.split('/')[-1])
+
         # Erase all windows anytime changes are made to properly show changes
         window2.erase()
         window3.erase()
@@ -217,7 +220,7 @@ def main(screen):
         # window3.refresh(0, 0, 0, window2Width, curses.LINES - 1, curses.COLS - 1)
         window3.refresh(0, 0, 0, window1Width+window2Width, curses.LINES - 1, curses.COLS - 1)
 
-        # display_window(window1, window1Height, window1Width, previous_dir, previous_files, preselected_option)
+        display_window(window1, window1Height, window1Width, previous_dir, previous_files, preselected_option)
         window1.refresh(0, 0, 0, 0, curses.LINES - 1, curses.COLS - 2)
 
         # Get user input
