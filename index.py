@@ -54,7 +54,7 @@ def display_content(window, file, windowHeight):
             lines = []
     for line in lines:
         y_coord += 1
-        if y_coord <= windowHeight: # curses.LINES - 2
+        if y_coord <= windowHeight - 2: # curses.LINES - 2
             window.addstr(y_coord, 0, line)
 
 def main(screen):
@@ -165,17 +165,17 @@ def main(screen):
         return color_scheme
 
     window2Width = math.floor(curses.COLS * 4.0/12.0)
-    window2Height = 1300
+    window2Height = 20000
     # window2 = curses.newwin(window2Height, window2Width, 0, 0)
     window2 = curses.newpad(window2Height, window2Width)
 
     window3Width = math.floor(curses.COLS * 5.0/12.0)
-    window3Height = 1300
+    window3Height = 20000
     # window3 = curses.newwin(window3Height, window3Width, 0, window2Width)
     window3 = curses.newpad(window3Height, window3Width)
 
     window1Width = math.floor(curses.COLS * 3.0/12.0)
-    window1Height = 1300
+    window1Height = 20000
     # window1 = curses.newwin(window1Height, window1Width, 0, window3Width+window2Width)
     window1 = curses.newpad(window1Height, window1Width)
 
@@ -210,13 +210,13 @@ def main(screen):
         window1.erase()
 
 		# Print the main menu options
-        window2.addstr(1, 2, f'Menu: {current_dir}')
+        window2.addstr(1, 2, f'Parent: {current_dir}')
         # window2.addstr(2, 2, f'{math.floor(curses.COLS/3)}')
         display_window(window2, window2Height, window2Width, current_dir, current_files, selected_option)        
         refresh_win2()
 
         # Print the children of the parent directory
-        window3.addstr(1, 2, f'SubMenu: {future_dir}')
+        window3.addstr(1, 1, f'Directory: {future_dir}')
         if os.path.isdir(future_dir):
             display_window(window3, window3Height, window3Width, future_dir, future_files, selected_suboption)
         else:
@@ -259,7 +259,7 @@ def main(screen):
             # else:
             #     window3.addstr(2, 1, str(open(file, 'rb').read()))
                 
-            window2.addstr(15, 1, "Down Key Works")
+            # window2.addstr(15, 1, "Down Key Works")
             refresh_win2(True)
         # Navigate up and down through the submenu options
         elif (key == curses.KEY_LEFT or key == 37):
