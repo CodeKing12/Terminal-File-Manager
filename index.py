@@ -56,12 +56,14 @@ def main(screen):
         elif selected_option >= math.floor(curses.LINES / 2):
             # Rotate prevents the pad from scrolling twice at once
             global rotate
-            stop_scrolling = len(previous_files) - (curses.LINES / 2)
+            stop_scrolling = False
+            if selected_option >= (len(previous_files) - (curses.LINES / 2) + 3):
+                stop_scrolling = True
             # Revert scrolling to original state when the highlighted item loops back to the start
             if win1_scroll >= math.floor(curses.LINES / 2) and selected_option <= math.floor(curses.LINES / 2):
                 win1_scroll = 0
             # Go up if the up signal is received, and vice-versa
-            if rotate:
+            if rotate and not stop_scrolling:
                 if down:
                     win1_scroll += 1
                 else:
