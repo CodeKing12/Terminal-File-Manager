@@ -307,13 +307,17 @@ def main(screen):
             refresh_win2(True, scroll=True)
         # Navigate up and down through the submenu options
         elif (key == curses.KEY_LEFT or key == 37):
+            # If the previous directory isn't the root folder, go back by 1 folder
             if previous_dir != None:
+                # Get the name of the previous directory and set the current directory to be the previous one
                 prev_dir_name = previous_dir.split('/')[-1]
                 current_dir = previous_dir
+                # If the name of the previous directory is empty, we're in the root directory else make the previous directory the one before the current directory
                 if prev_dir_name == "":
                     previous_dir = None
                 else:
                     previous_dir = os.path.dirname(current_dir)
+
                 selected_option = preselected_option
                 global win2_scroll
                 win2_scroll = math.floor(selected_option - (curses.LINES / 2) + 3)
@@ -332,43 +336,5 @@ def main(screen):
             # refresh_win2()
             window2.getch()
             break
-
-    # window2.addstr(previous_dir)
-    # window2.refresh()
-    
-
-    # window3.addstr(current_dir)
-    # y_coord = 3
-    # for file_name in current_files:
-    #     y_coord += 1
-    #     window3.addstr(2, 0, f"{y_coord}", h)
-    #     if y_coord >= curses.LINES:
-    #         pass
-    #     else:
-    #         window3.addstr(y_coord, 0, file_name)
-        
-
-    # window3.refresh()
-
-    # window1.addstr(0, 0, "Test window 3")
-    # window1.refresh()
-
-
-    # input = window3.getch()
-
-    # if input >= ord('1') and input <= ord(str(optioncount+1)):
-    #     position = input - ord('0') - 1 # convert keypress back to a number, then subtract 1 to get index
-    # elif input == 258: # down arrow
-    #     if position < optioncount:
-    #         position += 1
-    #     else: pos = 0
-    # elif input == 259: # up arrow
-    #     if position > 0:
-    #         position += -1
-    #     else: position = optioncount
-    # elif input != ord('\n'):
-    #     curses.flash()
-
-    # screen.getch()
 
 wrapper(main)
