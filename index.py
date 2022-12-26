@@ -3,6 +3,10 @@ from curses import wrapper
 import math
 import os
 import json
+# import ansi
+# from pygments import highlight
+# from pygments.lexers import PythonLexer
+# from pygments.formatters import TerminalFormatter
 
 # Let there be 3 windows
 # Window 1 shows the contents of the previous directory
