@@ -316,7 +316,7 @@ def main(screen):
             refresh_win2(True, scroll=True)
 
         # Navigate up and down through the submenu options
-        elif (key == curses.KEY_LEFT or key == 37):
+        elif (key == curses.KEY_LEFT) or (key == 37) or (key == curses.KEY_BACKSPACE) or (key == 8):
             # If the previous directory isn't the root folder, go back by 1 folder
             if previous_dir != None:
                 # Get the name of the previous directory and set the current directory to be the previous one
@@ -347,9 +347,9 @@ def main(screen):
             refresh_win2()
         
         # If the backspace key is pressed twice, quit the program
-        elif key == curses.KEY_BACKSPACE:
+        elif key == 27:
             second_key = screen.getch()
-            if second_key == curses.KEY_BACKSPACE:
+            if second_key == 27:
                 break
 
 wrapper(main)
