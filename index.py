@@ -5,8 +5,11 @@ import os
 import json
 
 # Let there be 3 windows
-# Their content is determined by the past, present and future directories
+# Window 1 shows the contents of the previous directory
+# Window 2 displays the contents of the current directory
+# Window 3 displays the contents of the currently selected directory in the second window (or the contents of the file if it's a file that is selected)
 
+# These values manage the scroll location of window 1 and window 2
 win2_scroll = 0
 win3_scroll = 0
 rotate = True
@@ -46,6 +49,7 @@ def expand_str(str, end_str, final_len):
     return " " + str + end_str.rjust(padding, ' ') + " "
 
 def arrange_folder(folder, items):
+    """Arranges the contents of a directory by putting the folders first, and the files next. The folders and files are separately sorted by name and combined"""
     folders = []
     files = []
     for file in items:
@@ -61,6 +65,7 @@ def arrange_folder(folder, items):
     return arrangement
 
 def display_content(window, file, windowHeight):
+    """Displays the contents of a file in the chosen window."""
     y_coord = 3
     with open(file) as file:
         try:
@@ -103,6 +108,7 @@ def main(screen):
             window2.refresh(0, 0, 0, window1Width, curses.LINES - 1, curses.COLS - 1)
 
     def display_window(window, windowHeight, windowWidth, window_dir, window_data, selector):
+        # Displays the contents of a directory in the chosen window with color styles
         y_coord = 3
         for i, option in enumerate(window_data):
             y_coord += 1
@@ -141,13 +147,17 @@ def main(screen):
                     window.addstr(y_coord, 0, expand_str(option, append_str, windowWidth), properties)
             else:
                 pass
-    # Clear screen
-    # screen.clear()
+    
+    
     curses.curs_set(0)
     curses.cbreak()
-    # curses.init_pair(1, curses.COLOR_WHITE, -1)
+
+    # Tell the terminal to use the default colors (to allow using the white background) 
     curses.use_default_colors()
     curses.start_color()
+
+    # Initialize all color pairs to be used in the program
+    # curses.init_pair(1, curses.COLOR_WHITE, -1)
     curses.init_pair(1,curses.COLOR_BLACK, curses.COLOR_WHITE) # Sets up color pair #1, it does black text with white background 
     curses.init_pair(2,curses.COLOR_BLUE, -1)
     curses.init_pair(3,curses.COLOR_RED, -1)
@@ -157,18 +167,19 @@ def main(screen):
     curses.init_pair(7, curses.COLOR_WHITE, curses.COLOR_RED)
     curses.init_pair(8, curses.COLOR_WHITE, curses.COLOR_YELLOW)
     curses.init_pair(9, curses.COLOR_WHITE, curses.COLOR_GREEN)
-    h = curses.color_pair(1) #h is the coloring for a highlighted menu option
-    folder_color = curses.color_pair(2)
-    compressed_color = curses.color_pair(3)
-    image_color = curses.color_pair(4)
-    document_color = curses.color_pair(5)
-    highlight_folder_color = curses.color_pair(6)
-    highlight_compressed_color = curses.color_pair(7)
-    highlight_image_color = curses.color_pair(8)
-    highlight_document_color = curses.color_pair(9)
+    h = curses.color_pair(1)
+    folder_color = curses.color_pair(2) # Color pair for a normal folder option
+    compressed_color = curses.color_pair(3) # Color pair for a normal compressed file option
+    image_color = curses.color_pair(4) # Color pair for a normal image file option
+    document_color = curses.color_pair(5) # Color pair for a normal document option
+    highlight_folder_color = curses.color_pair(6) # Color pair for a highlighted folder option
+    highlight_compressed_color = curses.color_pair(7) # Color pair for a highlighted compressed file option
+    highlight_image_color = curses.color_pair(8) # Color pair for a highlighted image file option
+    highlight_document_color = curses.color_pair(9) # Color pair for a highlighted document option
     n = curses.A_NORMAL #n is the coloring for a non highlighted menu option
 
     def get_color_scheme(file_name, is_dir=False, highlight=False):
+        """Receive a file name and determine the color pair to use for it based on the extension, whether it's a folder, and whether or not it is an highlighted option"""
         if highlight:
             color_scheme = curses.A_REVERSE
             if is_dir:
@@ -192,6 +203,12 @@ def main(screen):
         
         return color_scheme
 
+
+    # Create the first window (the window that shows the previous files)
+    window1Width = math.floor(curses.COLS * 3.0/12.0)
+    window1Height = 20000
+    window1 = curses.newpad(window1Height, window1Width)
+
     # Create the second window (the window that shows the current directory and it's content)
     window2Width = math.floor(curses.COLS * 4.0/12.0)
     window2Height = 20000
@@ -202,39 +219,36 @@ def main(screen):
     window3Height = 20000
     window3 = curses.newpad(window3Height, window3Width)
 
-    # Create the first window (the window that shows the previous files)
-    window1Width = math.floor(curses.COLS * 3.0/12.0)
-    window1Height = 20000
-    window1 = curses.newpad(window1Height, window1Width)
-
     screen.refresh()
-    # window2.bkgd(h)
-    # window3.bkgd(h)
-    # window1.bkgd(h)
 
     current_dir = os.getcwd()
     previous_dir = os.path.dirname(current_dir)
-    # previous_files = previous_files[1:20]
     selected_option = 0  # Keep track of the selected main menu option (the current directory)
 
-    # For now, current_dir is the current directory, previous_dir is the parent directory and future_dir is the current_dir
-
+    # current_dir is the current directory (the directory you're in at the moment), previous_dir is the parent directory (the previous folder you accessed) and future_dir is the future directory (directory of the selected option)
     while True:
+        # Collect and arrange the list of files in the current directory
         current_files = arrange_folder(current_dir, os.listdir(current_dir))
-        # Don't show the previous files if at the root directory
+
         if previous_dir == None:
+            # If we're at the root directory, don't show the previous files
             previous_files = []
         else:
+            # Otherwise, collect and arrange the list of files in the previous directory
             previous_files = arrange_folder(previous_dir, os.listdir(previous_dir))
 
+        # Get the path of the next directory by joining the path of the current directory with a slash, followed by the selected directory in the terminal menu
+        slash = '/'
+        # If we're at the root directory on Linux, there's no need to add a slash
         if previous_dir == None:
             slash = ''
-        else:
-            slash = '/'
         future_dir = current_dir + slash + current_files[selected_option]
+
+        # If the next directory is actually a directory, arrange the files for display
         if os.path.isdir(future_dir):
             future_files = arrange_folder(future_dir, os.listdir(future_dir))
         else:
+            # Otherwise, specify it as empty (having no files)
             future_files = []
 
         selected_suboption = 0  # Keep track of the selected option in window 3 (the next directory)
@@ -259,52 +273,48 @@ def main(screen):
         display_window(window2, window2Height, window2Width, current_dir, current_files, selected_option)        
         refresh_win2()
 
-        # Print the children of the parent directory
         window3.addstr(1, 1, f'Next Directory: {future_dir}')
+        # Print the children of the currently selected menu option on the third window if the selected option is a folder
         if os.path.isdir(future_dir):
             display_window(window3, window3Height, window3Width, future_dir, future_files, selected_suboption)
+        # If the selected option is a file, display it's contents on the third window
         else:
             display_content(window3, future_dir, window3Height)
-        # window3.refresh(0, 0, 0, window2Width, curses.LINES - 1, curses.COLS - 1)
         window3.refresh(0, 0, 0, window1Width+window2Width, curses.LINES - 1, curses.COLS - 1)
 
+        # Display the files in the previous directory on the first window
         display_window(window1, window1Height, window1Width, previous_dir, previous_files, preselected_option)
         window1.refresh(0, 0, 0, 0, curses.LINES - 1, curses.COLS - 2)
 
         # Get user input
         key = screen.getch()
 
-        # Navigate up and down through the main menu options
+        # Move the highlighted menu entry up if the down key is pressed
         if key == curses.KEY_UP or key == 38:
             if selected_option > 0:
                 selected_option -= 1
             else:
                 selected_option = len(current_files) - 1
 
+            # update the future directory to be the current highlighted option
             file = current_dir + '/' + current_files[selected_option]
             if os.path.isdir(file):
                 future_dir = file
-            # else:
-            #     window3.addstr(3, 2, str(open(file, 'rt', errors='ignore').read()))
-            # window3.refresh(0, 0, 0, window2Width, window3Height, window3Width+window2Width)
-
-            window2.addstr(curses.LINES - 1, 1, "Up Key works")
+            
+            # window2.addstr(curses.LINES - 1, 1, "Up Key works")
+            # Refresh the second window to properly reflect changes
             refresh_win2(False, scroll=True)
             
+        # Move the highlighted menu entry down if the down key is pressed
         elif (key == curses.KEY_DOWN or key == 40):
             if selected_option < len(current_files) - 1:
                 selected_option += 1
             else:
                 selected_option = 0
-
-            # file = current_dir + '/' + current_files[selected_option]
-            # if os.path.isdir(file):
-            #     future_dir = file
-            # else:
-            #     window3.addstr(2, 1, str(open(file, 'rb').read()))
                 
             # window2.addstr(15, 1, "Down Key Works")
             refresh_win2(True, scroll=True)
+
         # Navigate up and down through the submenu options
         elif (key == curses.KEY_LEFT or key == 37):
             # If the previous directory isn't the root folder, go back by 1 folder
@@ -318,23 +328,28 @@ def main(screen):
                 else:
                     previous_dir = os.path.dirname(current_dir)
 
+                # Once the user goes back, the selected option will be the folder that they just came out from
                 selected_option = preselected_option
+
+                # Scroll to the currently selected option
                 global win2_scroll
                 win2_scroll = math.floor(selected_option - (curses.LINES / 2) + 3)
                 if not win2_scroll >= 0:
                     win2_scroll = 0
+
             refresh_win2()
         elif (key == curses.KEY_RIGHT) or (key == 39) or (key == curses.KEY_ENTER) or (key == 10) or (key == 13):
+            # If the next directory is a folder and it has at least 1 content, move into it
             if os.path.isdir(future_dir) and len(os.listdir(future_dir)) > 0:
                 previous_dir = current_dir
                 current_dir = future_dir
                 selected_option = 0
             refresh_win2()
-        # Select the current option
+        
+        # If the backspace key is pressed twice, quit the program
         elif key == curses.KEY_BACKSPACE:
-            # window2.addstr(len(previous_files) + 4, 1, 'You selected "{}" from the main menu and "{}" from the submenu'.format(previous_files[selected_option], current_files[selected_suboption]))
-            # refresh_win2()
-            window2.getch()
-            break
+            second_key = screen.getch()
+            if second_key == curses.KEY_BACKSPACE:
+                break
 
 wrapper(main)
