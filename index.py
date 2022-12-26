@@ -3,6 +3,11 @@ from curses import wrapper
 import math
 import os
 import json
+import logging
+from color import get_color
+
+pair1 = (4, -1, 0)
+pair2 = (6, -1, 131072)
 # import ansi
 # from pygments import highlight
 # from pygments.lexers import PythonLexer
@@ -82,6 +87,14 @@ def display_content(window, file, windowHeight):
             window.addstr(y_coord, 0, line)
 
 def main(screen):
+    logger = logging.getLogger(__file__)
+    hdlr = logging.FileHandler(__file__ + ".log")
+    formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+    hdlr.setFormatter(formatter)
+    logger.addHandler(hdlr)
+    logger.setLevel(logging.DEBUG)
+
+
     def refresh_win2(down=True, scroll=False):
         # Prevent scrolling if at the end of the menu
         if selected_option == len(current_files) - 1 and len(current_files) > curses.LINES - 2:

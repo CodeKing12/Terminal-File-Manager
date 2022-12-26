@@ -43,6 +43,7 @@ def get_color(fg, bg):
                 curses.init_pair(size, fg, bg)
             except curses.error:
                 # If this fails too, colors are probably not supported
+                print("Failed to get colors")
                 pass
         COLOR_PAIRS[key] = size
 
