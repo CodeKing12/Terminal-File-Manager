@@ -2,13 +2,10 @@ import curses
 from curses import wrapper
 import math
 import os
-import json
 import logging
-from color import get_color
 
 pair1 = (4, -1, 0)
 pair2 = (6, -1, 131072)
-# import ansi
 # from pygments import highlight
 # from pygments.lexers import PythonLexer
 # from pygments.formatters import TerminalFormatter
